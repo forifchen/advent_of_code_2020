@@ -3,7 +3,11 @@ import sys
 def solve():
     encoded_seats = fetch_seats()
     seat_ids = [get_id(seat) for seat in encoded_seats]
-    return max(seat_ids)
+    sorted_seats = sorted(seat_ids)
+    for i in range(1, len(sorted_seats)):
+        if sorted_seats[i - 1] + 1 != sorted_seats[i]:
+            return sorted_seats[i - 1] + 1
+    raise
 
 def fetch_seats():
     lines = read_lines()
