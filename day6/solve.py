@@ -11,13 +11,16 @@ def fetch_blocks():
     return [block.strip() for block in blocks]
 
 def build_group(block):
-    line = block.replace("\n", " ")
-    s = set()
-    for ch in line:
-        if ch != " ":
-            s.add(ch)
-    return len(s)
-
+    lines = block.split("\n")
+    res = 0
+    for c in range(ord('a'), ord('z') + 1):
+        in_all = True
+        for line in lines:
+            if line.count(chr(c)) == 0:
+                in_all = False
+        if in_all:
+            res += 1
+    return res
 
 def read_lines():
     filename = "simple_input.txt" if sys.argv[1] == "simple" else "input.txt"
