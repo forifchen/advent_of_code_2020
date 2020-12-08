@@ -4,22 +4,45 @@ visited = set()
 
 def solve():
     operations = fetch_operations()
-    return run_operations_from(operations, 0, 0)
+    for i in range(len(operations)):
+        operation, val = operations[i]
+        if operation == "acc":
+            continue
+        if operation == "nop":
+            operations[i][0] = "jmp"
+            visited.clear()
+            acc, is_cycle = run_operations_from(operations, 0, 0)
+            if not is_cycle:
+                return acc
+            operations[i][0] = "nop"
+            continue
+        if operation == "jmp":
+            operations[i][0] = "nop"
+            visited.clear()
+            acc, is_cycle = run_operations_from(operations, 0, 0)
+            if not is_cycle:
+                return acc
+            operations[i][0] = "jmp"
+            continue
+        raise
+    raise
 
 def run_operations_from(operations, row, accumulated):
+    if row == len(operations):
+        return accumulated, False
     operation, val = operations[row]
     visited.add(row)
     if operation == "nop":
         if row + 1 in visited:
-            return accumulated
+            return accumulated, True
         return run_operations_from(operations, row + 1, accumulated)
     if operation == "acc":
         if row + 1 in visited:
-            return accumulated + val
+            return accumulated + val, True
         return run_operations_from(operations, row + 1, accumulated + val)
     if operation == "jmp":
         if row + val in visited:
-            return accumulated
+            return accumulated, True
         return run_operations_from(operations, row + val, accumulated)
     raise
 
