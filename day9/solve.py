@@ -2,7 +2,19 @@ import sys
 
 def solve():
     sequence = fetch_sequence()
-    return get_first_non_valid(sequence, 25)
+    target = get_first_non_valid(sequence, 25)
+    prefix_sums = [0]
+    total = 0
+    for value in sequence:
+        total += value
+        prefix_sums.append(total)
+
+    for i in xrange(0, len(prefix_sums)):
+        for j in xrange(i + 1, len(prefix_sums)):
+            if prefix_sums[j] - prefix_sums[i] == target:
+                block = sequence[i:j]
+                encryption = max(block) + min(block)
+                return encryption
 
 def get_first_non_valid(sequence, tail):
     for i in range(tail, len(sequence)):
