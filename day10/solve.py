@@ -5,16 +5,19 @@ def solve():
     raw_jolts.append(max(raw_jolts) + 3)
     raw_jolts.append(0)
     jolts = sorted(raw_jolts)
-    c1 = 0
-    c3 = 0
+    counts = [1]
     for i in range(1, len(jolts)):
         diff = jolts[i] - jolts[i - 1]
-        if diff == 3:
-            c3 += 1
-        if diff == 1:
-            c1 += 1
+        result = 0
+        if diff <= 3:
+            result += counts[i - 1]
+        if 2 <= i and jolts[i] - jolts[i - 2] <= 3:
+            result += counts[i - 2]
+        if 3 <= i and jolts[i] - jolts[i - 3] <= 3:
+            result += counts[i - 3]
+        counts.append(result)
 
-    return c1 * c3
+    return counts[-1]
 
 def fetch_jolts():
     lines = read_lines()
