@@ -32,7 +32,7 @@ def get_next(grid):
                     next_grid[i][j] = "#"
                 continue
             if grid[i][j] == "#":
-                if count_neighbors_occupied(i, j, grid) >= 4:
+                if count_neighbors_occupied(i, j, grid) >= 5:
                     next_grid[i][j] = "L"
                 continue
             raise
@@ -48,9 +48,22 @@ def count_neighbors_occupied(i, j, grid):
                 continue
             ni, nj = i + di, j + dj
             if 0 <= ni and ni < rows_count and 0 <= nj and nj < cols_count:
-                if grid[ni][nj] == "#":
+                if first_visible_seat([i, j], [di, dj], grid) == "#":
                     result += 1
     return result
+
+def first_visible_seat(seat, direction, grid):
+    rows_count = len(grid)
+    cols_count = len(grid[0])
+    current = [seat[0], seat[1]]
+    while True:
+        ni, nj = [current[0] + direction[0], current[1] + direction[1]]
+        if 0 <= ni and ni < rows_count and 0 <= nj and nj < cols_count:
+            if grid[ni][nj] != ".":
+                return grid[ni][nj]
+            current = [ni, nj]
+        else:
+            return None
 
 def count_occupied_seats(stable):
     result = 0
