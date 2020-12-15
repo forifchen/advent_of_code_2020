@@ -21,15 +21,15 @@ def process(instruction, state):
         return
     if instruction_type == "write":
         value = instruction[1]
-        index = instruction[2]
-        binary_value = bin(value)[2:]
-        binary_list = ["0"]*(36 - len(binary_value)) + list(binary_value)
-        write_value(binary_list, state)
-        state["total"][index] = get_integer_value(state["value"])
+        index = int(instruction[2])
+        binary_index = bin(index)[2:]
+        binary_list = ["0"]*(36 - len(binary_index)) + list(binary_index)
+        write_value(value, binary_list, state)
+#state["total"][index] = get_integer_value(state["value"])
         return
     raise
 
-def write_value(binary_list, state):
+def write_value(writing_value, binary_list, state):
     mask = state["mask"]
     value = state["value"]
     for i in range(len(binary_list)):
@@ -39,12 +39,26 @@ def write_value(binary_list, state):
             binary_list[-i-1] = "1"
             continue
         if cell == "0":
-            binary_list[-i-1] = "0"
             continue
         if cell == "X":
+            binary_list[-i-1] = "F"
             continue
         raise
-    state["value"] = binary_list
+    indices = get_indices(binary_list)
+    for index in indices:
+        state["total"][index] = writing_value
+
+def get_indices(binary_list):
+    floating_bits = filter(lambda i: binary_list[i] == "F", range(36))
+    indices = []
+    for combination in range(2**len(floating_bits)):
+        base = binary_list[:]
+        binary_string = bin(combination)[2:]
+        binary_combination = "0"*(len(floating_bits) - len(binary_string)) + binary_string
+        for i in range(len(floating_bits)):
+            base[floating_bits[i]] = binary_combination[i]
+        indices.append(get_integer_value(base))
+    return indices
 
 def fetch_instructions():
     lines = read_lines()
