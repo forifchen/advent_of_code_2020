@@ -3,16 +3,21 @@ import sys
 def solve():
     sequence = fetch_sequence()
     
-    while len(sequence) < 2020:
-        sequence.append(get_next(sequence))
+    memory = [None] * 30000000
+    for i in range(len(sequence) - 1):
+        store(sequence[i], i, memory)
+    while len(sequence) < 30000000:
+        sequence.append(get_next(sequence, memory))
+        store(sequence[-2], len(sequence) - 2, memory)
     return sequence[-1]
 
-def get_next(sequence):
+def get_next(sequence, memory):
     last = sequence[-1]
-    for i in range(len(sequence) - 2, -1, -1):
-        if sequence[i] == last:
-            return len(sequence) - 1 - i
-    return 0
+    result = 0 if memory[last] is None else len(sequence)-1 - memory[last]
+    return result
+
+def store(number, index, memory):
+    memory[number] = index
 
 def fetch_sequence():
     line = read_lines()[0].strip()
