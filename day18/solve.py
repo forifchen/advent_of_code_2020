@@ -11,7 +11,8 @@ def fetch_expressions():
 def simplify(expression):
     level = 0
     interval = [0, 0]
-    result = 0
+    result = 1
+    adder = 0
     operation = "+"
     for i, symbol in enumerate(expression):
         if symbol == "(":
@@ -23,10 +24,12 @@ def simplify(expression):
             level -= 1
             if level == 0:
                 interval[1] = i
-                if operation == "+":
-                    result += simplify(expression[interval[0]+1:interval[1]])
+                partial_result = simplify(expression[interval[0]+1:interval[1]])
+                if operation == "*":
+                    result *= adder
+                    adder = partial_result
                 else:
-                    result *= simplify(expression[interval[0]+1:interval[1]])
+                    adder += partial_result
             continue
         if symbol in ["+", "*"]:
             if level == 0:
@@ -36,12 +39,15 @@ def simplify(expression):
             continue
         if 1 <= int(symbol) and int(symbol) <= 9:
             if level == 0:
-                if operation == "+":
-                    result += int(symbol)
+                partial_result = int(symbol)
+                if operation == "*":
+                    result *= adder
+                    adder = partial_result
                 else:
-                    result *= int(symbol)
+                    adder += partial_result
             continue
         raise
+    result *= adder
     return result
 
 
