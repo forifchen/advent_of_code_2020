@@ -5,7 +5,7 @@ def solve():
     rules, messages = fetch_rules()
     result = 0
     for message in messages:
-        if matches(message, rules, 0):
+        if matches_0(message, rules):
             result += 1
     return result
 
@@ -86,6 +86,48 @@ def matches_list(message, rules, id_list):
         if not matches(message[index:index + length], rules, r_id):
             return False
         index += length
+    return True
+
+def matches_0(message, rules):
+    length_42 = get_rule_length(rules, 42)
+    index = length_42
+    while index < len(message):
+        is_matching_left = matches_8(message[0:index], rules)
+        is_matching_right = matches_11(message[index:], rules)
+        is_matching = is_matching_left and is_matching_right
+        if is_matching:
+            return True
+        index += length_42
+    return False
+
+
+def matches_8(message, rules):
+    length = get_rule_length(rules, 42)
+    if len(message) % length != 0:
+        return False
+    index = 0
+    for i in range(len(message) / length):
+        if not matches(message[index:index + length], rules, 42):
+            return False
+        index += length
+    return True
+
+def matches_11(message, rules):
+    length_42 = get_rule_length(rules, 42)
+    length_31 = get_rule_length(rules, 31)
+    length = length_42 + length_31
+    if len(message) % length != 0:
+        return False
+    index_left = 0
+    index_right = len(message)
+    while index_left < index_right:
+        if not matches(message[index_left : index_left + length_42], rules, 42):
+            return False
+        if not matches(message[index_right - length_31 : index_right], rules, 31):
+            return False
+        index_left += length_42
+        index_right -= length_31
+
     return True
 
 def get_rule_length(rules, id):
