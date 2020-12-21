@@ -4,16 +4,22 @@ from maxflow import Graph
 
 def solve():
     dishes = fetch_dishes()
-    matrix_graph, ingredient_counter = build_graph(dishes)
+    matrix_graph, ingredient_inverse_map, allergen_inverse_map = build_graph(dishes)
     maxflow_graph = Graph(matrix_graph) 
     source, sink = 0, 1
     maxflow_graph.FordFulkerson(source, sink)
 
-    result = 0
+    matching = dict()
     for ingredient_id, is_present in enumerate(maxflow_graph.graph[sink]):
-        if is_present == 0 and ingredient_id >= len(matrix_graph) - len(ingredient_counter):
-            result += ingredient_counter[ingredient_id]
-    return result
+        if is_present:
+            for allergen_id, is_matching_allergen in enumerate(maxflow_graph.graph[ingredient_id]):
+                if is_matching_allergen:
+                    matching[ingredient_inverse_map[ingredient_id]] = allergen_inverse_map[allergen_id]
+                    break
+
+
+    sorted_ingredients = sorted(matching.keys(), key=lambda ingredient: matching[ingredient])
+    return ",".join(sorted_ingredients)
 
 def build_graph(dishes):
     ingredient_map = dict()
@@ -58,20 +64,17 @@ def build_graph(dishes):
                 v = ingredient_map[ingredient]
                 graph[u].append(v)
 
-    ingredient_counter = dict()
-    for ingredient_list, allergen_list in dishes:
-        for ingredient in ingredient_list:
-            ingredient_id = ingredient_map[ingredient]
-            if ingredient_id in ingredient_counter:
-                ingredient_counter[ingredient_id] += 1
-            else:
-                ingredient_counter[ingredient_id] = 1
-
     matrix_graph = [[0 for _ in range(len(graph))] for _ in range(len(graph))]
     for row_id, row in enumerate(graph):
         for col_id in row:
             matrix_graph[row_id][col_id] = 1
-    return matrix_graph, ingredient_counter
+    return matrix_graph, build_inverse_map(ingredient_map), build_inverse_map(allergen_map)
+
+def build_inverse_map(generic_map):
+    inverse_map = dict()
+    for key, value in generic_map.items():
+        inverse_map[value] = key
+    return inverse_map
 
 def fetch_dishes():
     lines = read_lines()
