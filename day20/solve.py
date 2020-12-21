@@ -2,11 +2,57 @@ import sys
 
 def solve():
     tile_list = fetch_tiles()
+    monster = [
+        "                  # ",
+        "#    ##    ##    ###",
+        " #  #  #  #  #  #   "
+    ]
+    monster = get_matrix_mutations(monster)[4]
+
     dimension = 12
     tiling = [[0 for _ in range(dimension)] for _ in range(dimension)]
     fill_tiling(0, 0, tiling, tile_list, dimension, dimension)
-    return tiling[0][0]["id"] * tiling[0][-1]["id"] * tiling[-1][0]["id"] * tiling[-1][-1]["id"]
+    image = build_image(tiling, dimension)
 
+    is_on_monster = [[False for _ in range(len(image))] for _ in range(len(image))]
+    for i in range(len(image)):
+        for j in range(len(image)):
+            if is_monster(i, j, image, monster):
+                for monster_i in range(len(monster)):
+                    for monster_j in range(len(monster[0])):
+                        is_on_monster[i + monster_i][j + monster_j] = monster[monster_i][monster_j] == "#"
+    result = 0
+    for i in range(len(image)):
+        for j in range(len(image)):
+            if image[i][j] == "#" and not is_on_monster[i][j]:
+                result += 1
+    return result
+def is_monster(i, j, image, monster):
+    if i + len(monster) > len(image):
+        return False
+    if j + len(monster[0]) > len(image[0]):
+        return False
+    for monster_i in range(len(monster)):
+        for monster_j in range(len(monster[0])):
+            if monster[monster_i][monster_j] == "#":
+                if not image[i + monster_i][j + monster_j] == "#":
+                    return False
+    return True
+
+def build_image(tiling, dimension):
+    tile_size = len(tiling[0][0]["content"]) - 2
+    size = dimension * tile_size
+    image = [["." for _ in range(size)] for _ in range(size)]
+    for tile_row in range(dimension):
+        for tile_col in range(dimension):
+            tile = tiling[tile_row][tile_col]
+            mutated_matrix = get_matrix_mutations(tile["content"])[tile["mutation_id"]]
+            for i in range(tile_size):
+                for j in range(tile_size):
+                    image_i = tile_row * tile_size + i
+                    image_j = tile_col * tile_size + j
+                    image[image_i][image_j] = mutated_matrix[i + 1][j + 1]
+    return image
 
 def fill_tiling(row, col, tiling, tile_list, row_count, col_count):
     if row == row_count:
@@ -16,9 +62,10 @@ def fill_tiling(row, col, tiling, tile_list, row_count, col_count):
 
     for tile in tile_list:
         if not tile["is_used"]:
-            for mutation in get_mutations(tile):
+            for mutation_id, mutation in enumerate(get_mutations(tile)):
                 is_fitting = fits(mutation, row, col, tiling, row_count, col_count)
                 if is_fitting:
+                    mutation["mutation_id"] = mutation_id
                     tiling[row][col] = mutation
                     tile["is_used"] = True
                     if fill_tiling(row, col + 1, tiling, tile_list, row_count, col_count):
@@ -32,9 +79,9 @@ def fits(mutated_tile, row, col, tiling, row_count, col_count):
     return fits_left and fits_top
 
 def does_fit_left(tile, tile_left):
-    return tile["content"]["left"] == tile_left["content"]["right"]
+    return tile["border"]["left"] == tile_left["border"]["right"]
 def does_fit_top(tile, tile_top):
-    return tile["content"]["top"] == tile_top["content"]["down"]
+    return tile["border"]["top"] == tile_top["border"]["down"]
 
 def get_mutations(tile):
     mutations = []
@@ -48,12 +95,24 @@ def get_mutations(tile):
         mutations.append(rotation)
         tile = rotation
     return mutations
+def get_matrix_mutations(tile):
+    mutations = []
+    for _ in range(4):
+        rotation = get_matrix_rotation(tile)
+        mutations.append(rotation)
+        tile = rotation
+    tile = get_matrix_flip(tile)
+    for _ in range(4):
+        rotation = get_matrix_rotation(tile)
+        mutations.append(rotation)
+        tile = rotation
+    return mutations
 
 def get_flip(tile):
     flip = dict() 
     flip["id"] = tile["id"]
-    flip["content"] = get_border_flip(tile["content"])
-    flip["is_used"] = tile["is_used"]
+    flip["border"] = get_border_flip(tile["border"])
+    flip["content"] = tile["content"]
     return flip
 def get_border_flip(border):
     flip = dict()
@@ -62,14 +121,16 @@ def get_border_flip(border):
     flip["top"] = reverse(border["top"])
     flip["down"] = reverse(border["down"])
     return flip
+def get_matrix_flip(matrix):
+    return [reverse(row) for row in matrix]
 def reverse(string):
     return "".join(reversed(string))
 
 def get_rotation(tile):
     rotation = dict()
     rotation["id"] = tile["id"]
-    rotation["content"] = get_border_rotation(tile["content"])
-    rotation["is_used"] = tile["is_used"]
+    rotation["border"] = get_border_rotation(tile["border"])
+    rotation["content"] = tile["content"]
     return rotation
 def get_border_rotation(border):
     rotation = dict()
@@ -78,6 +139,14 @@ def get_border_rotation(border):
     rotation["right"] = reverse(border["down"])
     rotation["down"] = border["left"]
     return rotation
+def get_matrix_rotation(matrix):
+    row_count, col_count = len(matrix[0]), len(matrix)
+    rotation = [["." for _ in range(col_count)] for _ in range(row_count)]
+    for i in range(col_count):
+        for j in range(row_count):
+            rotation[row_count - 1 - j][i] = matrix[i][j]
+    return rotation
+
 
 def fetch_tiles():
     lines = read_lines()
@@ -91,7 +160,8 @@ def build_tile(block):
     lines = block.strip().split("\n")
     tile = dict()
     tile["id"] = int(lines[0][5:-1])
-    tile["content"] = build_border(lines[1:])
+    tile["border"] = build_border(lines[1:])
+    tile["content"] = lines[1:]
     return tile
 
 def build_border(block):
