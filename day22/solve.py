@@ -8,21 +8,46 @@ def solve():
     else:
         return compute_score(B, index)
 
-def compute_winner(A, B):
+def compute_winner(A, B, game_id = 1):
     a, b = 0, 0
+    memory = set()
     while a < len(A) and b < len(B):
-        if A[a] > B[b]:
+        encoded = encode(A, a, B, b)
+        if encoded in memory:
+            return "A", a
+        memory.add(encoded)
+        battle_winner = get_battle_winner(A, a, B, b, game_id)
+
+        if battle_winner == "A":
             A.append(A[a])
             A.append(B[b])
-        else:
+        elif battle_winner == "B":
             B.append(B[b])
             B.append(A[a])
+        else:
+            raise
         a += 1
         b += 1
     if a == len(A):
         return "B", b
     else:
         return "A", a
+
+
+def encode(A, a, B, b):
+    encoded = 0
+    for i in range(a, len(A)):
+        encoded = encoded * 53 + A[i]
+    encoded = encoded * 53 + 51
+    for i in range(b, len(B)):
+        encoded = encoded * 53 + B[i]
+    return encoded
+
+def get_battle_winner(A, a, B, b, game_id):
+    if A[a] <= len(A) - a - 1 and B[b] <= len(B) - b - 1:
+        winner, _ = compute_winner(A[a + 1 : a + A[a] + 1], B[b + 1 : b + B[b] + 1], game_id + 1)
+        return winner
+    return "A" if A[a] > B[b] else "B"
 
 def compute_score(number_list, head):
     size = len(number_list) - head
