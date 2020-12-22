@@ -2,6 +2,13 @@ import sys
 
 def solve():
     A, B = fetch_players()
+    winner, index = compute_winner(A, B)
+    if winner == "A":
+        return compute_score(A, index)
+    else:
+        return compute_score(B, index)
+
+def compute_winner(A, B):
     a, b = 0, 0
     while a < len(A) and b < len(B):
         if A[a] > B[b]:
@@ -13,9 +20,9 @@ def solve():
         a += 1
         b += 1
     if a == len(A):
-        return compute_score(B, b)
+        return "B", b
     else:
-        return compute_score(A, a)
+        return "A", a
 
 def compute_score(number_list, head):
     size = len(number_list) - head
