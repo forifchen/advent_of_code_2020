@@ -2,26 +2,58 @@ import sys
 
 def solve():
     sequence = fetch_numbers()[0]
-    for i in range(100):
-        sequence = run_move(sequence)
-    index = sequence.index(1)
-    sequence = sequence[index + 1:] + sequence[0:index]
-    return "".join(str(x) for x in sequence)
+    size = 1000000
+    sequence = sequence + range(10, size + 1)
+    next_index = range(1, size + 1)
+    next_index[-1] = 0
+    position = range(size + 1)
+    for i in range(size):
+        position[sequence[i]] = i
 
-def run_move(sequence):
-    current = sequence[0]
-    block = sequence[1:4]
-    destination = get_next(current)
+    current = 0
+    for i in range(10 * size):
+        run_move(sequence, next_index, position, current)
+        current = next_index[current]
+
+    index = position[1]
+    block = []
+    right = index
+    for i in range(2):
+        right = next_index[right]
+        block.append(sequence[right])
+    return block[0]*block[1]
+
+
+def print_sequence(sequence, next_index):
+    last = []
+    start = 0
+    for i in range(len(sequence)):
+        last.append(sequence[start])
+        start = next_index[start]
+    print(last)
+
+def run_move(sequence, next_index, position, current):
+    block = []
+    right = current
+    for i in range(3):
+        right = next_index[right]
+        block.append(sequence[right])
+    right_4 = next_index[right]
+
+    destination = get_next(sequence[current], sequence)
     while destination in block:
-        destination = get_next(destination)
-    index = sequence.index(destination)
-    tail = sequence[4:index + 1] + block + sequence[index + 1:]
-    sequence = tail + [current]
-    return sequence
+        destination = get_next(destination, sequence)
 
-def get_next(current):
+    destination_index = position[destination]
+    right = next_index[destination_index]
+
+    next_index[destination_index] = position[block[0]]
+    next_index[position[block[-1]]] = right
+    next_index[current] = right_4
+
+def get_next(current, sequence):
     if current == 1:
-        return 9
+        return len(sequence)
     else:
         return current - 1
 
